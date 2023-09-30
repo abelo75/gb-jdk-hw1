@@ -36,13 +36,9 @@ public class Client extends JFrame {
     }
 
     void addChatEventListeners() {
-        chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, name, (eventType, eventPayload) -> {
-            addMessage(eventPayload.toString());
-        });
+        chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, name, (eventType, eventPayload) -> addMessage(eventPayload.toString()));
 
-        chatProtocol.subscribeList(chatProtocol.MESSAGE_LIST_CHANNEL, name, (eventType, eventPayload) -> {
-            eventPayload.forEach(e -> addMessage(e.toString()));
-        });
+        chatProtocol.subscribeList(chatProtocol.MESSAGE_LIST_CHANNEL, name, (eventType, eventPayload) -> eventPayload.forEach(e -> addMessage(e.toString())));
     }
 
     void createUI() {
