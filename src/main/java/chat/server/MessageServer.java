@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MessageServer implements Readable, Writable {
+    private final String FILENAME = "messages.txt";
     private final ChatProtocol<Message> chatProtocol;
     JTextArea textArea;
     private final ArrayList<Message> messages = new ArrayList<>();
@@ -58,12 +59,12 @@ public class MessageServer implements Readable, Writable {
 
     public void start() {
         addToLog("Server started " + new Date());
-        read("messages.txt");
+        read(FILENAME);
         chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, chatProtocol.SERVER, (channel, payload) -> {
             chatProtocol.send(chatProtocol.MESSAGE_CHANNEL, chatProtocol.ALL_CLIENTS, payload);
             addToLog("[" + payload.getTime() + "] " + payload.getSender() + ">" + payload.getMessage());
             messages.add(payload);
-            write("messages.txt", payload);
+            write(FILENAME, payload);
         });
 
         chatProtocol.subscribe(chatProtocol.AUTH_CHANNEL, chatProtocol.SERVER, (channel, payload) -> {
