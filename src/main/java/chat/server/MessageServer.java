@@ -16,7 +16,7 @@ public class MessageServer<T extends Message> {
     private final Storage<T> storage;
     private final ArrayList<String> clients = new ArrayList<>();
     private final Commands<T> authCommands;
-    private final Commands<T> messageCommand;
+    private final Commands<T> messageCommands;
     private final Logger logger;
     private boolean started;
 
@@ -25,7 +25,7 @@ public class MessageServer<T extends Message> {
         this.chatProtocol = chatProtocol;
         this.storage = storage;
         authCommands = Commands.link(new LoggerCommand<>(logger), new LoginCommand<>(chatProtocol, clients, logger, messages), new LogoutCommand<>(chatProtocol, clients));
-        messageCommand = Commands.link(new LoggerCommand<>(logger), new CheckAuthCommand<>(chatProtocol, clients), new MessageToClientsCommand<>(chatProtocol), new AddToMessagesCommand<>(messages), new WriteMessageCommand<>(storage));
+        messageCommands = Commands.link(new LoggerCommand<>(logger), new CheckAuthCommand<>(chatProtocol, clients), new MessageToClientsCommand<>(chatProtocol), new AddToMessagesCommand<>(messages), new WriteMessageCommand<>(storage));
     }
 
     public void start() {
@@ -35,10 +35,7 @@ public class MessageServer<T extends Message> {
         started = true;
         logger.addToLog("Server started " + new Date());
         storage.read(messages);
-        chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, chatProtocol.SERVER, (payload -> {
-            System.out.println("Message received" + payload.toString());
-            messageCommand.handle(payload);
-        }));
+        chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, chatProtocol.SERVER, (messageCommands::handle));
         chatProtocol.subscribe(chatProtocol.AUTH_CHANNEL, chatProtocol.SERVER, authCommands::handle);
     }
 
