@@ -5,13 +5,13 @@ import protocol.Message;
 
 import javax.swing.*;
 
-public class Starter extends JFrame {
+public class Main extends JFrame {
     private final String CLIENT_NAME = "client";
     JButton serverButton = new JButton("Server");
     JButton clientButton = new JButton("Client");
     private int clientNumber = 1;
     private final EventBusChatProtocol<Message> chatProtocol = EventBusChatProtocol.getInstance();
-    Starter() {
+    public Main() {
         setTitle("Chat starter");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 400);
@@ -20,7 +20,7 @@ public class Starter extends JFrame {
         createUI();
     }
 
-    void createUI() {
+    public void createUI() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         serverButton.addActionListener(e -> {
@@ -36,6 +36,6 @@ public class Starter extends JFrame {
         add(panel);
     }
     public static void main(String[] args) {
-        new Starter();
+        new Main();
     }
 }

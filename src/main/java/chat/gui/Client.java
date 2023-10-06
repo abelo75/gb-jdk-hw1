@@ -1,48 +1,70 @@
 package chat.gui;
 
+import chat.client.MessageClient;
+import common.Logger;
 import protocol.ChatProtocol;
 import protocol.Message;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Date;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-public class Client extends JFrame {
+public class Client extends JFrame implements Logger {
 
-    private final String SEND_BUTTON_TEXT = "Send";
-    private final String LOGIN_BUTTON_TEXT = "Login";
+    private final static String SEND_BUTTON_TEXT = "Send";
+    private final static String LOGIN_BUTTON_TEXT = "Login";
     private final TextArea text = new TextArea("");
     private final TextField messageText = new TextField("");
     private final JTextField login = new JTextField("");
     private final JTextField password = new JPasswordField("");
-    private final ChatProtocol<Message> chatProtocol;
     private final String name;
+    private JButton buttonLogin;
+    private JButton sendButton;
+    private final MessageClient<Message> messageClient;
+
 
     Client(ChatProtocol<Message> chatProtocol, String name) {
-        this.chatProtocol = chatProtocol;
         this.name = name;
+        messageClient = new MessageClient<>(chatProtocol, this, name);
         setTitle(name);
         setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setSize(400, 400);
         setLocationRelativeTo(null);
         setVisible(true);
         createUI();
-        addChatEventListeners();
+        addListeners();
     }
 
-    @Override
-    public String getName() {
-        return name;
+    void addListeners() {
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                messageClient.logout();
+                messageClient.removeListeners();
+                super.windowClosing(e);
+            }
+        });
+        buttonLogin.addActionListener(e -> messageClient.login(login.getText()));
+        sendButton.addActionListener(e -> sendMessage());
+        messageText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == '\n') {
+                    sendMessage();
+                }
+            }
+        });
     }
 
-    void addChatEventListeners() {
-        chatProtocol.subscribe(chatProtocol.MESSAGE_CHANNEL, name, (eventType, eventPayload) -> addMessage(eventPayload.toString()));
-
-        chatProtocol.subscribeList(chatProtocol.MESSAGE_LIST_CHANNEL, name, (eventType, eventPayload) -> eventPayload.forEach(e -> addMessage(e.toString())));
+    private void sendMessage() {
+        messageClient.sendMessage(messageText.getText());
+        messageText.setText("");
     }
 
     void createUI() {
-
         add(getTopPanel(), BorderLayout.NORTH);
         add(getMiddlePanel(), BorderLayout.CENTER);
         add(getBottomPanel(), BorderLayout.SOUTH);
@@ -59,8 +81,7 @@ public class Client extends JFrame {
         topPanel.add(login);
         password.setText("password");
         topPanel.add(password);
-        JButton buttonLogin = new JButton(LOGIN_BUTTON_TEXT);
-        buttonLogin.addActionListener(e -> auth(login.getText(), password.getText()));
+        buttonLogin = new JButton(LOGIN_BUTTON_TEXT);
         topPanel.add(buttonLogin);
         return topPanel;
     }
@@ -75,26 +96,14 @@ public class Client extends JFrame {
     Component getBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(messageText, BorderLayout.CENTER);
-        JButton sendButton = new JButton(SEND_BUTTON_TEXT);
-        sendButton.addActionListener(e -> {
-            sendMessage(messageText.getText());
-            messageText.setText("");
-        });
+        sendButton = new JButton(SEND_BUTTON_TEXT);
         bottomPanel.add(sendButton, BorderLayout.EAST);
 
         return bottomPanel;
     }
 
-    void sendMessage(String message) {
-        chatProtocol.send(chatProtocol.MESSAGE_CHANNEL, chatProtocol.SERVER, new Message(getName(), chatProtocol.SERVER, message, new Date()));
-    }
-
-    void addMessage(String message) {
+    @Override
+    public void addToLog(String message) {
         text.append(message + "\n");
     }
-
-    void auth(String login, String password) {
-        chatProtocol.send(chatProtocol.AUTH_CHANNEL, chatProtocol.SERVER, new Message(getName(), chatProtocol.SERVER, login + ":" + password, new Date()));
-    }
-
 }

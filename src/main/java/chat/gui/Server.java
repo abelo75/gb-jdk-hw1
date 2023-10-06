@@ -1,5 +1,7 @@
 package chat.gui;
 
+import common.Logger;
+import chat.server.storage.FileStorage;
 import chat.server.MessageServer;
 import protocol.ChatProtocol;
 import protocol.Message;
@@ -7,14 +9,17 @@ import protocol.Message;
 import javax.swing.*;
 import java.awt.*;
 
-public class Server extends JFrame {
+public class Server extends JFrame implements Logger {
     private static final String START_LABEL = "Start";
     private static final String STOP_LABEL = "Stop";
+    private static final String FILENAME = "messages.txt";
+
+
     JButton buttonStart, buttonStop;
     JTextArea textArea;
     private boolean isStarted = false;
 
-    private final MessageServer messageServer;
+    private final MessageServer<Message> messageServer;
 
     public Server(ChatProtocol<Message> chatProtocol) {
         super("Server");
@@ -22,7 +27,8 @@ public class Server extends JFrame {
         setSize(400, 300);
         createUserInterface();
         setVisible(true);
-        messageServer = new MessageServer(chatProtocol, textArea);
+        FileStorage<Message> storage = new FileStorage<>(Message.class, FILENAME);
+        messageServer = new MessageServer<>(chatProtocol, storage, this);
     }
 
     public void setStarted(boolean started) {
@@ -74,5 +80,10 @@ public class Server extends JFrame {
         panel.add(createButtonPanel(), BorderLayout.SOUTH);
         panel.add(createTextArea());
         add(panel);
+    }
+
+    @Override
+    public void addToLog(String message) {
+        textArea.append(message + "\n");
     }
 }

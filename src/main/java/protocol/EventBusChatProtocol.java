@@ -23,7 +23,7 @@ public class EventBusChatProtocol<T extends Message> extends ChatProtocol<T> {
 
             for (String key : eventSubscribers.keySet()) {
                 if (key.equals(receiver) || receiver.equals(ALL) || (receiver.equals(ALL_CLIENTS) && !key.equals(SERVER))) {
-                    eventSubscribers.get(key).onMessage(type, message);
+                    eventSubscribers.get(key).onMessage(message);
                 }
             }
         }
@@ -54,7 +54,7 @@ public class EventBusChatProtocol<T extends Message> extends ChatProtocol<T> {
 
             for (String key : eventSubscribers.keySet()) {
                 if (key.equals(receiver) || receiver.equals(ALL)) {
-                    eventSubscribers.get(key).onMessage(type, messages);
+                    eventSubscribers.get(key).onMessage(messages);
                 }
             }
         }
